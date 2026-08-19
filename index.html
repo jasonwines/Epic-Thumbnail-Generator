@@ -109,8 +109,11 @@
             border-radius: 4px;
         }
         
-        .color-picker { display: flex; gap: 10px; margin-top: 5px; }
-        .color-picker input[type="color"] { width: 100%; height: 35px; border: none; padding: 0; cursor: pointer; background: none; }
+        /* Updated Color Picker Layout */
+        .color-picker-container { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; }
+        .color-row { display: flex; align-items: center; gap: 10px; }
+        .color-row input[type="color"] { flex: 0 0 50px; height: 35px; border: none; padding: 0; cursor: pointer; background: none; }
+        .color-row input[type="text"].hex-input { flex: 1; margin-top: 0; font-family: monospace; text-transform: uppercase;}
         
         button {
             margin-top: 10px;
@@ -200,9 +203,16 @@
                 <option value="solid">Solid Color</option>
                 <option value="gradient" selected>Linear Gradient</option>
             </select>
-            <div class="color-picker">
-                <input type="color" id="bgColor1" value="#c1272d">
-                <input type="color" id="bgColor2" value="#1b3696">
+            
+            <div class="color-picker-container">
+                <div class="color-row">
+                    <input type="color" id="bgColor1" value="#c1272d">
+                    <input type="text" id="bgHex1" class="hex-input" value="#C1272D" maxlength="7">
+                </div>
+                <div class="color-row" id="bgColor2Row">
+                    <input type="color" id="bgColor2" value="#1b3696">
+                    <input type="text" id="bgHex2" class="hex-input" value="#1B3696" maxlength="7">
+                </div>
             </div>
             
             <div id="gradientSettings" class="sub-section">
@@ -341,7 +351,6 @@
             aboutModal.style.display = 'none';
         });
 
-        // Close modal if clicking outside the content box
         window.addEventListener('click', (e) => {
             if (e.target === aboutModal) {
                 aboutModal.style.display = 'none';
@@ -381,6 +390,9 @@
             shadowX: document.getElementById('shadowX'),
             shadowY: document.getElementById('shadowY')
         };
+        
+        const bgHex1 = document.getElementById('bgHex1');
+        const bgHex2 = document.getElementById('bgHex2');
 
         // Event Listeners for live updating with structural safeguards
         Object.values(inputs).forEach(input => {
@@ -395,8 +407,30 @@
         // Specific UI toggles for Background
         inputs.bgType.addEventListener('change', (e) => {
             const isGrad = e.target.value === 'gradient';
-            inputs.c2.style.display = isGrad ? 'block' : 'none';
+            document.getElementById('bgColor2Row').style.display = isGrad ? 'flex' : 'none';
             document.getElementById('gradientSettings').style.display = isGrad ? 'block' : 'none';
+        });
+
+        // Two-way sync for Background Color 1
+        inputs.c1.addEventListener('input', (e) => {
+            bgHex1.value = e.target.value.toUpperCase();
+        });
+        bgHex1.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                inputs.c1.value = e.target.value;
+                updateCanvas();
+            }
+        });
+
+        // Two-way sync for Background Color 2
+        inputs.c2.addEventListener('input', (e) => {
+            bgHex2.value = e.target.value.toUpperCase();
+        });
+        bgHex2.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                inputs.c2.value = e.target.value;
+                updateCanvas();
+            }
         });
 
         // Image Upload Logic
