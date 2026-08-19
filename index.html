@@ -129,7 +129,7 @@
         }
         .color-wrapper input[type="color"] {
             width: 100%;
-            height: 150%; /* Oversized to hide native borders on some browsers */
+            height: 150%; 
             border: none;
             padding: 0;
             margin: -25%; 
@@ -149,8 +149,8 @@
             background-color: white;
             -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 22 1-1h3l9-9'/%3E%3Cpath d='M3 21v-3l9-9'/%3E%3Cpath d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/%3E%3C/svg%3E") no-repeat center / contain;
             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 22 1-1h3l9-9'/%3E%3Cpath d='M3 21v-3l9-9'/%3E%3Cpath d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/%3E%3C/svg%3E") no-repeat center / contain;
-            pointer-events: none; /* Allows the click to pass directly to the color input */
-            mix-blend-mode: difference; /* Forces visibility against both light and dark backgrounds */
+            pointer-events: none; 
+            mix-blend-mode: difference; 
         }
         
         button {
@@ -302,8 +302,13 @@
             </select>
             
             <label for="textColor">Text Fill Color</label>
-            <div class="color-wrapper">
-                <input type="color" id="textColor" value="#ffffff">
+            <div class="color-picker-container">
+                <div class="color-row">
+                    <div class="color-wrapper">
+                        <input type="color" id="textColor" value="#ffffff">
+                    </div>
+                    <input type="text" id="textHex" class="hex-input" value="#FFFFFF" maxlength="7">
+                </div>
             </div>
             
             <label>Font Size: <span id="textSizeVal">90</span>px</label>
@@ -321,8 +326,13 @@
                     <label class="inline-label" for="textOutline">Enable Outline</label>
                 </div>
                 <label>Outline Color</label>
-                <div class="color-wrapper">
-                    <input type="color" id="outlineColor" value="#000000">
+                <div class="color-picker-container">
+                    <div class="color-row">
+                        <div class="color-wrapper">
+                            <input type="color" id="outlineColor" value="#000000">
+                        </div>
+                        <input type="text" id="outlineHex" class="hex-input" value="#000000" maxlength="7">
+                    </div>
                 </div>
                 <label>Outline Thickness: <span id="outlineWidthVal">5</span>px</label>
                 <input type="range" id="outlineWidth" min="1" max="30" step="1" value="5">
@@ -334,8 +344,13 @@
                     <label class="inline-label" for="textShadow">Enable Drop Shadow</label>
                 </div>
                 <label>Shadow Color</label>
-                <div class="color-wrapper">
-                    <input type="color" id="shadowColor" value="#000000">
+                <div class="color-picker-container">
+                    <div class="color-row">
+                        <div class="color-wrapper">
+                            <input type="color" id="shadowColor" value="#000000">
+                        </div>
+                        <input type="text" id="shadowHex" class="hex-input" value="#000000" maxlength="7">
+                    </div>
                 </div>
                 <label>Shadow Opacity: <span id="shadowAlphaVal">1.0</span></label>
                 <input type="range" id="shadowAlpha" min="0" max="1" step="0.05" value="1">
@@ -439,8 +454,12 @@
             shadowY: document.getElementById('shadowY')
         };
         
+        // Hex Inputs
         const bgHex1 = document.getElementById('bgHex1');
         const bgHex2 = document.getElementById('bgHex2');
+        const textHex = document.getElementById('textHex');
+        const outlineHex = document.getElementById('outlineHex');
+        const shadowHex = document.getElementById('shadowHex');
 
         // Event Listeners for live updating with structural safeguards
         Object.values(inputs).forEach(input => {
@@ -459,7 +478,9 @@
             document.getElementById('gradientSettings').style.display = isGrad ? 'block' : 'none';
         });
 
-        // Two-way sync for Background Color 1
+        // --- TWO WAY SYNCING FOR ALL COLOR PICKERS --- //
+
+        // Background Color 1
         inputs.c1.addEventListener('input', (e) => {
             bgHex1.value = e.target.value.toUpperCase();
         });
@@ -470,7 +491,7 @@
             }
         });
 
-        // Two-way sync for Background Color 2
+        // Background Color 2
         inputs.c2.addEventListener('input', (e) => {
             bgHex2.value = e.target.value.toUpperCase();
         });
@@ -480,6 +501,40 @@
                 updateCanvas();
             }
         });
+
+        // Text Fill Color
+        inputs.textColor.addEventListener('input', (e) => {
+            textHex.value = e.target.value.toUpperCase();
+        });
+        textHex.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                inputs.textColor.value = e.target.value;
+                updateCanvas();
+            }
+        });
+
+        // Outline Color
+        inputs.outlineColor.addEventListener('input', (e) => {
+            outlineHex.value = e.target.value.toUpperCase();
+        });
+        outlineHex.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                inputs.outlineColor.value = e.target.value;
+                updateCanvas();
+            }
+        });
+
+        // Shadow Color
+        inputs.shadowColor.addEventListener('input', (e) => {
+            shadowHex.value = e.target.value.toUpperCase();
+        });
+        shadowHex.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                inputs.shadowColor.value = e.target.value;
+                updateCanvas();
+            }
+        });
+
 
         // Image Upload Logic
         inputs.imgUpload.addEventListener('change', (e) => {
