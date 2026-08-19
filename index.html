@@ -109,12 +109,11 @@
             border-radius: 4px;
         }
         
-        /* Updated Color Picker Layout */
+        /* Color Picker Wrappers */
         .color-picker-container { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; }
         .color-row { display: flex; align-items: center; gap: 10px; }
         .color-row input[type="text"].hex-input { flex: 1; margin-top: 0; font-family: monospace; text-transform: uppercase;}
         
-        /* Color Picker Wrappers & Icons */
         .color-wrapper {
             position: relative;
             height: 35px;
@@ -123,10 +122,7 @@
             border-radius: 4px;
             overflow: hidden;
         }
-        .color-row .color-wrapper {
-            flex: 0 0 50px;
-            margin-top: 0;
-        }
+        .color-row .color-wrapper { flex: 0 0 50px; margin-top: 0; }
         .color-wrapper input[type="color"] {
             width: 100%;
             height: 150%; 
@@ -136,16 +132,11 @@
             cursor: pointer;
             background: none;
         }
-        
-        /* Eyedropper SVG dynamically rendered and inverted on colors via blend-mode */
         .color-wrapper::after {
             content: "";
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 18px;
-            height: 18px;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 18px; height: 18px;
             background-color: white;
             -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 22 1-1h3l9-9'/%3E%3Cpath d='M3 21v-3l9-9'/%3E%3Cpath d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/%3E%3C/svg%3E") no-repeat center / contain;
             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 22 1-1h3l9-9'/%3E%3Cpath d='M3 21v-3l9-9'/%3E%3Cpath d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/%3E%3C/svg%3E") no-repeat center / contain;
@@ -165,6 +156,7 @@
             font-weight: bold;
         }
         button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
         
         .theme-btn { background: #6c757d; margin-bottom: 15px; margin-top: 0; }
         .theme-btn:hover { background: #5a6268; }
@@ -172,8 +164,8 @@
         .clear-btn { background: #dc3545; margin-top: 5px; }
         .clear-btn:hover { background: #c82333; }
         
-        .download-btn { background: #28a745; font-size: 1.1rem; padding: 12px; margin-top: 10px; }
-        .download-btn:hover { background: #218838; }
+        .download-btn { background: #28a745; font-size: 1.1rem; padding: 12px; margin-top: 10px; transition: background 0.2s;}
+        .download-btn:hover:not(:disabled) { background: #218838; }
         
         .flex-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
         .download-section { margin-top: 20px; padding-top: 15px; border-top: 2px solid var(--border); }
@@ -366,6 +358,39 @@
         <div class="download-section">
             <label for="filenameInput">Download File Name</label>
             <input type="text" id="filenameInput" value="Thumbnail">
+            
+            <div class="flex-row" style="margin-top: 15px;">
+                <input type="checkbox" id="enableBatch">
+                <label class="inline-label" for="enableBatch" style="color: #007bff;">Enable Batch Export</label>
+            </div>
+            
+            <div id="batchSettings" class="sub-section" style="display: none;">
+                <p style="margin-top: 0; font-size: 0.85rem; opacity: 0.8;">Use the <b>{N}</b> tag in your text and file name fields.</p>
+                <p style="margin-top: 5px; font-size: 0.85rem; font-weight: bold; color: #d9534f;">⚠️ Warning: Your browser will prompt you to allow multiple file downloads. Please click "Allow".</p>
+                
+                <label for="batchType">Sequence Type</label>
+                <select id="batchType">
+                    <option value="number">Numbers (1, 2, 3...)</option>
+                    <option value="letter">Letters (A, B, C...)</option>
+                </select>
+                
+                <div class="flex-row" style="margin-top: 5px;">
+                    <div style="flex: 1;">
+                        <label style="margin-top: 0;">Start</label>
+                        <input type="text" id="batchStart" value="1">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="margin-top: 0;">End</label>
+                        <input type="text" id="batchEnd" value="24">
+                    </div>
+                </div>
+                
+                <div class="flex-row" id="paddingRow" style="margin-top: 10px;">
+                    <input type="checkbox" id="batchPadding" checked>
+                    <label class="inline-label" for="batchPadding">Zero-Pad Numbers (01, 02)</label>
+                </div>
+            </div>
+
             <button class="download-btn" id="downloadBtn">Download Your Epic Thumbnail</button>
         </div>
     </div>
@@ -461,15 +486,62 @@
         const outlineHex = document.getElementById('outlineHex');
         const shadowHex = document.getElementById('shadowHex');
 
+        // Batch Elements
+        const enableBatch = document.getElementById('enableBatch');
+        const batchSettings = document.getElementById('batchSettings');
+        const batchType = document.getElementById('batchType');
+        const batchStart = document.getElementById('batchStart');
+        const batchEnd = document.getElementById('batchEnd');
+        const batchPadding = document.getElementById('batchPadding');
+        const paddingRow = document.getElementById('paddingRow');
+        const filenameInput = document.getElementById('filenameInput');
+
         // Event Listeners for live updating with structural safeguards
         Object.values(inputs).forEach(input => {
             if (input) {
-                input.addEventListener('input', updateCanvas);
+                input.addEventListener('input', () => updateCanvas());
                 if (input.type === 'checkbox') {
-                    input.addEventListener('change', updateCanvas);
+                    input.addEventListener('change', () => updateCanvas());
                 }
             }
         });
+
+        // Batch Logic UI Toggles and Automatic {N} Insertion
+        enableBatch.addEventListener('change', (e) => {
+            const isBatch = e.target.checked;
+            batchSettings.style.display = isBatch ? 'block' : 'none';
+            document.getElementById('downloadBtn').innerText = isBatch ? 'Generate & Download Batch' : 'Download Your Epic Thumbnail';
+            
+            // Automatically add or remove {N} tag from inputs
+            if (isBatch) {
+                if (!inputs.text.value.includes('{N}')) {
+                    inputs.text.value = inputs.text.value.trim() + ' {N}';
+                }
+                if (!filenameInput.value.includes('{N}')) {
+                    filenameInput.value = filenameInput.value.trim() + ' {N}';
+                }
+            } else {
+                // Safely strip the tag and any preceding space when batch is disabled
+                inputs.text.value = inputs.text.value.replace(/\s?\{N\}/g, '');
+                filenameInput.value = filenameInput.value.replace(/\s?\{N\}/g, '');
+            }
+            
+            updateCanvas();
+        });
+        
+        batchType.addEventListener('change', (e) => {
+            paddingRow.style.display = e.target.value === 'number' ? 'flex' : 'none';
+            if (e.target.value === 'letter') {
+                batchStart.value = 'A';
+                batchEnd.value = 'Z';
+            } else {
+                batchStart.value = '1';
+                batchEnd.value = '24';
+            }
+            updateCanvas();
+        });
+        batchStart.addEventListener('input', () => updateCanvas());
+        batchPadding.addEventListener('change', () => updateCanvas());
 
         // Specific UI toggles for Background
         inputs.bgType.addEventListener('change', (e) => {
@@ -479,61 +551,20 @@
         });
 
         // --- TWO WAY SYNCING FOR ALL COLOR PICKERS --- //
+        inputs.c1.addEventListener('input', (e) => bgHex1.value = e.target.value.toUpperCase());
+        bgHex1.addEventListener('input', (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { inputs.c1.value = e.target.value; updateCanvas(); } });
 
-        // Background Color 1
-        inputs.c1.addEventListener('input', (e) => {
-            bgHex1.value = e.target.value.toUpperCase();
-        });
-        bgHex1.addEventListener('input', (e) => {
-            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                inputs.c1.value = e.target.value;
-                updateCanvas();
-            }
-        });
+        inputs.c2.addEventListener('input', (e) => bgHex2.value = e.target.value.toUpperCase());
+        bgHex2.addEventListener('input', (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { inputs.c2.value = e.target.value; updateCanvas(); } });
 
-        // Background Color 2
-        inputs.c2.addEventListener('input', (e) => {
-            bgHex2.value = e.target.value.toUpperCase();
-        });
-        bgHex2.addEventListener('input', (e) => {
-            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                inputs.c2.value = e.target.value;
-                updateCanvas();
-            }
-        });
+        inputs.textColor.addEventListener('input', (e) => textHex.value = e.target.value.toUpperCase());
+        textHex.addEventListener('input', (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { inputs.textColor.value = e.target.value; updateCanvas(); } });
 
-        // Text Fill Color
-        inputs.textColor.addEventListener('input', (e) => {
-            textHex.value = e.target.value.toUpperCase();
-        });
-        textHex.addEventListener('input', (e) => {
-            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                inputs.textColor.value = e.target.value;
-                updateCanvas();
-            }
-        });
+        inputs.outlineColor.addEventListener('input', (e) => outlineHex.value = e.target.value.toUpperCase());
+        outlineHex.addEventListener('input', (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { inputs.outlineColor.value = e.target.value; updateCanvas(); } });
 
-        // Outline Color
-        inputs.outlineColor.addEventListener('input', (e) => {
-            outlineHex.value = e.target.value.toUpperCase();
-        });
-        outlineHex.addEventListener('input', (e) => {
-            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                inputs.outlineColor.value = e.target.value;
-                updateCanvas();
-            }
-        });
-
-        // Shadow Color
-        inputs.shadowColor.addEventListener('input', (e) => {
-            shadowHex.value = e.target.value.toUpperCase();
-        });
-        shadowHex.addEventListener('input', (e) => {
-            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                inputs.shadowColor.value = e.target.value;
-                updateCanvas();
-            }
-        });
+        inputs.shadowColor.addEventListener('input', (e) => shadowHex.value = e.target.value.toUpperCase());
+        shadowHex.addEventListener('input', (e) => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { inputs.shadowColor.value = e.target.value; updateCanvas(); } });
 
 
         // Image Upload Logic
@@ -585,16 +616,67 @@
             updateCanvas();
         });
 
-        // Download Logic
-        document.getElementById('downloadBtn').addEventListener('click', () => {
-            const link = document.createElement('a');
-            
-            let fileName = document.getElementById('filenameInput').value.trim();
-            if (!fileName) fileName = 'Thumbnail';
-            
-            link.download = fileName + '.png';
-            link.href = canvas.toDataURL('image/png', 1.0);
-            link.click();
+        // Download Logic (Handles Single vs Staggered Batch)
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            let fileName = filenameInput.value.trim() || 'Thumbnail';
+            const isBatch = enableBatch.checked;
+
+            if (!isBatch) {
+                // Single File Output
+                const link = document.createElement('a');
+                link.download = fileName.replace(/{N}/g, '') + '.png';
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+            } else {
+                // Staggered Batch Output
+                const btn = document.getElementById('downloadBtn');
+                btn.innerText = "Generating Files...";
+                btn.disabled = true;
+
+                let sequence = [];
+                
+                if (batchType.value === 'number') {
+                    let s = parseInt(batchStart.value) || 1;
+                    let e = parseInt(batchEnd.value) || 24;
+                    for (let i = s; i <= e; i++) {
+                        sequence.push(batchPadding.checked ? String(i).padStart(2, '0') : String(i));
+                    }
+                } else {
+                    let s = (batchStart.value || 'A').toUpperCase().charCodeAt(0);
+                    let e = (batchEnd.value || 'Z').toUpperCase().charCodeAt(0);
+                    for (let i = s; i <= e; i++) {
+                        sequence.push(String.fromCharCode(i));
+                    }
+                }
+
+                for (let i = 0; i < sequence.length; i++) {
+                    const tag = sequence[i];
+                    updateCanvas(tag); 
+                    
+                    // Safely name the file even if {N} was forgotten in the filename box
+                    let outName = fileName;
+                    if (outName.includes('{N}')) {
+                        outName = outName.replace(/{N}/g, tag);
+                    } else {
+                        outName = outName + " " + tag; 
+                    }
+                    
+                    // Trigger individual download
+                    const link = document.createElement('a');
+                    link.download = outName + '.png';
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    link.click();
+
+                    // Pause for 300ms before downloading the next file to prevent the browser from blocking the loop
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+
+                // Restore preview on screen
+                updateCanvas();
+                
+                btn.innerText = "Generate & Download Batch";
+                btn.disabled = false;
+            }
         });
 
         // Helper function for shadow opacity
@@ -605,7 +687,7 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        function updateCanvas() {
+        function updateCanvas(overrideTag = null) {
             // Update labels
             document.getElementById('gradAngleVal').innerText = inputs.gradAngle.value;
             document.getElementById('gradCenterVal').innerText = inputs.gradCenter.value;
@@ -713,11 +795,27 @@
                 ctx.textBaseline = 'middle';
                 ctx.font = `bold ${inputs.textSize.value}px ${inputs.font.value}`;
                 
+                // --- Handle {N} Tag for Preview ---
+                let displayText = inputs.text.value;
+                if (overrideTag !== null) {
+                    displayText = displayText.replace(/{N}/g, overrideTag);
+                } else if (enableBatch.checked) {
+                    // Show a preview of the first item in the sequence
+                    let previewTag = batchStart.value;
+                    if (batchType.value === 'number' && batchPadding.checked && !isNaN(parseInt(previewTag))) {
+                        previewTag = String(parseInt(previewTag)).padStart(2, '0');
+                    }
+                    displayText = displayText.replace(/{N}/g, previewTag);
+                } else {
+                    // If batching is off, strip the tag from view to avoid ugly {N}s in standard thumbs
+                    displayText = displayText.replace(/{N}/g, '');
+                }
+                
                 if (inputs.textOutline.checked) {
                     ctx.strokeStyle = inputs.outlineColor.value;
                     ctx.lineWidth = inputs.outlineWidth.value;
                     ctx.lineJoin = 'round';
-                    ctx.strokeText(inputs.text.value, x, y);
+                    ctx.strokeText(displayText, x, y);
                 }
 
                 if (inputs.textShadow.checked) {
@@ -730,7 +828,7 @@
                 }
 
                 ctx.fillStyle = inputs.textColor.value;
-                ctx.fillText(inputs.text.value, x, y);
+                ctx.fillText(displayText, x, y);
                 ctx.restore();
             }
         }
