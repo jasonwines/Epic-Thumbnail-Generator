@@ -109,6 +109,20 @@
             border-radius: 4px;
         }
         
+        /* Highlighted Display Text Input */
+        #textInput {
+            font-size: 1.1rem;
+            padding: 10px;
+            font-weight: bold;
+            border: 2px solid #007bff;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        #textInput:focus {
+            outline: none;
+            box-shadow: 0 0 12px rgba(0, 123, 255, 0.6);
+        }
+
         /* Color Picker Wrappers */
         .color-picker-container { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; }
         .color-row { display: flex; align-items: center; gap: 10px; }
@@ -365,7 +379,7 @@
             </div>
             
             <div id="batchSettings" class="sub-section" style="display: none;">
-                <p style="margin-top: 0; font-size: 0.85rem; opacity: 0.8;">Use the <b>{N}</b> tag in your text and file name fields.</p>
+                <p style="margin-top: 0; font-size: 0.85rem; opacity: 0.8;">Use the <b>{N}</b> tag in your text and file name fields to add sequence numbers or letters. The sequence will be placed exactly where you put the tag.</p>
                 <p style="margin-top: 5px; font-size: 0.85rem; font-weight: bold; color: #d9534f;">⚠️ Warning: Your browser will prompt you to allow multiple file downloads. Please click "Allow".</p>
                 
                 <label for="batchType">Sequence Type</label>
@@ -399,7 +413,6 @@
         <canvas id="canvas" width="960" height="540"></canvas>
     </div>
 
-    <!-- About Modal Overlay -->
     <div id="aboutModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-btn" id="closeModalBtn">&times;</span>
